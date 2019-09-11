@@ -41,7 +41,7 @@ pil_to_tensor = standard_transforms.ToTensor()
 
 dataRoot = '../ProcessedData/shanghaitech_part_B/test'
 
-model_path = 'xxx.pth'
+model_path = './models/M2TCC_Model/08-SANet_all_ep_57_mae_42.4_mse_85.4.pth'
 
 def main():
     
@@ -64,7 +64,7 @@ def test(file_list, model_path):
     preds = []
 
     for filename in file_list:
-    	print( filename )
+        print( filename )
         imgname = dataRoot + '/img/' + filename
         filename_no_ext = filename.split('.')[0]
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 import torch
@@ -62,24 +63,25 @@ class SAModule(nn.Module):
     def __init__(self, in_channels, out_channels, use_bn):
         super(SAModule, self).__init__()
         branch_out = out_channels // 4
+        branch_inner = in_channels // 2
         self.branch1x1 = BasicConv(in_channels, branch_out, use_bn=use_bn,
                             kernel_size=1)
         self.branch3x3 = nn.Sequential(
-                        BasicConv(in_channels, 2*branch_out, use_bn=use_bn,
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
                             kernel_size=1),
-                        BasicConv(2*branch_out, branch_out, use_bn=use_bn,
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
                             kernel_size=3, padding=1),
                         )
         self.branch5x5 = nn.Sequential(
-                        BasicConv(in_channels, 2*branch_out, use_bn=use_bn,
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
                             kernel_size=1),
-                        BasicConv(2*branch_out, branch_out, use_bn=use_bn,
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
                             kernel_size=5, padding=2),
                         )
         self.branch7x7 = nn.Sequential(
-                        BasicConv(in_channels, 2*branch_out, use_bn=use_bn,
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
                             kernel_size=1),
-                        BasicConv(2*branch_out, branch_out, use_bn=use_bn,
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
                             kernel_size=7, padding=3),
                         )
     
@@ -107,17 +109,18 @@ class SANet(nn.Module):
             nn.MaxPool2d(2, 2),
             SAModule(128, 128, use_bn),
             nn.MaxPool2d(2, 2),
-            SAModule(128, 128, use_bn),
+            SAModule(128, 64, use_bn),
             )
 
         self.decoder = nn.Sequential(
-            BasicConv(128, 64, use_bn=use_bn, kernel_size=9, padding=4),
+            BasicConv(64, 64, use_bn=use_bn, kernel_size=9, padding=4),
             BasicDeconv(64, 64, 2, stride=2, use_bn=use_bn),
             BasicConv(64, 32, use_bn=use_bn, kernel_size=7, padding=3),
             BasicDeconv(32, 32, 2, stride=2, use_bn=use_bn),
             BasicConv(32, 16,  use_bn=use_bn, kernel_size=5, padding=2),
             BasicDeconv(16, 16, 2, stride=2, use_bn=use_bn),
             BasicConv(16, 16,  use_bn=use_bn, kernel_size=3, padding=1),
+            BasicConv(16, 16,  use_bn=use_bn, kernel_size=5, padding=2),
             BasicConv(16, 1, use_bn=False, kernel_size=1),
             )
         initialize_weights(self.modules())

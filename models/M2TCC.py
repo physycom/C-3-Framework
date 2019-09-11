@@ -10,7 +10,7 @@ class CrowdCounter(nn.Module):
         super(CrowdCounter, self).__init__()        
         
         if model_name == 'SANet':
-            from M2TCC_Model.SANet import SANet as net
+            from .M2TCC_Model.SANet import SANet as net ###
 
 
         self.CCN = net()
