@@ -71,9 +71,9 @@ def logger(exp_path, exp_name, work_dir, exception, resume=False):
     
     with open(log_file, 'a') as f:
         f.write(''.join(cfg_lines) + '\n\n\n\n')
-
-    if not resume:
-        copy_cur_env(work_dir, exp_path+ '/' + exp_name + '/code', exception)
+## NEEDS FIX
+#    if not resume:
+#        copy_cur_env(work_dir, exp_path+ '/' + exp_name + '/code', exception)
 
 
     return writer, log_file

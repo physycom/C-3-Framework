@@ -40,8 +40,8 @@ class SSIM_Loss(_Loss):
         sigma2_sq = F.conv2d(target*target, self.weight, padding=self.size, groups=self.in_channels) - mean2_sq
         sigma_12 = F.conv2d(input*target, self.weight, padding=self.size, groups=self.in_channels) - mean_12
     
-        C1 = 0.01**2
-        C2 = 0.03**2
+        C1 = 0.0001 #0.01**2
+        C2 = 0.0009 #0.03**2
 
         ssim = ((2*mean_12+C1)*(2*sigma_12+C2)) / ((mean1_sq+mean2_sq+C1)*(sigma1_sq+sigma2_sq+C2))
         if self.size_average:

@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 
-import matplotlib
 import os
 import random
 import torch
@@ -14,7 +13,7 @@ from models.M2TCC import CrowdCounter
 from config import cfg
 from misc.utils import *
 import scipy.io as sio
-from PIL import Image, ImageOps
+from PIL import Image
 
 torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
@@ -206,11 +205,7 @@ def test(file_list, model_path):
         # sio.savemat(exp_name+'/'+filename_no_ext+'_diff.mat',{'data':diff})
                      
 
-
-
 if __name__ == '__main__':
     main()
-
-
 
 
