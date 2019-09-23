@@ -15,7 +15,7 @@ gpus = cfg.GPU_ID
 if len(gpus)==1:
     torch.cuda.set_device(gpus[0])
 
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.enabled = True
 
 
 #------------prepare data loader------------

@@ -1,22 +1,21 @@
 from matplotlib import pyplot as plt
 
 import os
-import random
 import torch
 from torch.autograd import Variable
 import torchvision.transforms as standard_transforms
-import misc.transforms as own_transforms
 import pandas as pd
 import numpy as np
 
 from models.M2TCC import CrowdCounter
 from config import cfg
-from misc.utils import *
+from torch import nn
 import scipy.io as sio
 from PIL import Image
 
+## SETUP AND PARAMETERS #######################
 torch.cuda.set_device(0)
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.enabled = False
 
 exp_name = '../SHHB_results'
 if not os.path.exists(exp_name):
@@ -27,24 +26,25 @@ if not os.path.exists(exp_name+'/pred'):
 
 if not os.path.exists(exp_name+'/gt'):
     os.mkdir(exp_name+'/gt')
+    
+if not os.path.exists(exp_name+'/diff'):
+    os.mkdir(exp_name+'/diff')
 
+slicing = False # use the paper test method. may give better results, but slower
+save_graphs = False # save density maps images
+dataRoot = '../ProcessedData/shanghaitech_part_B/test'
+model_path = './all_ep_867_mae_10.5_mse_18.9.pth'
 mean_std = ([0.45163909, 0.44693739, 0.43153589],[0.23758833, 0.22964933, 0.2262614])
+##################################################
+
 img_transform = standard_transforms.Compose([
         standard_transforms.ToTensor(),
         standard_transforms.Normalize(*mean_std)
     ])
-restore = standard_transforms.Compose([
-        own_transforms.DeNormalize(*mean_std),
-        standard_transforms.ToPILImage()
-    ])
 pil_to_tensor = standard_transforms.ToTensor()
 
-dataRoot = '../ProcessedData/shanghaitech_part_B/test'
-
-model_path = 'xxx.pth'
-
 def main():
-    
+    print(dataRoot)
     file_list = [filename for root,dirs,filename in os.walk(dataRoot+'/img/')]                                           
 
     test(file_list[0], model_path)
@@ -81,129 +81,122 @@ def test(file_list, model_path):
         if img.mode == 'L':
             img = img.convert('RGB')
 
+        img = img_transform(img) # need to add padding to multiples of 8 if slicing
+        
+        if slicing:
+            pred_maps = []
+            x4 = img.shape[2]   # full image
+            x1 = x4 // 2        # half image
+            x2 = x1 // 2        # quarter image
+            x3 = x1 + x2
+            y4 = img.shape[1]
+            y1 = y4 // 2
+            y2 = y1 // 2
+            y3 = y1 + y2
+            img_list = [
+                    img[:,  0:y1 ,  0:x1],
+                    img[:,  0:y1 , x2:x3],
+                    img[:,  0:y1 , x1:x4],
+                    img[:, y2:y3 ,  0:x1],
+                    img[:, y2:y3 , x2:x3],
+                    img[:, y2:y3 , x1:x4],
+                    img[:, y1:y4 ,  0:x1],
+                    img[:, y1:y4 , x2:x3],
+                    img[:, y1:y4 , x1:x4]
+                    ]
+        
+            for inputs in img_list:
+                with torch.no_grad():
+                    img = Variable(inputs[None,:,:,:]).cuda()
+                    pred_maps.append(net.test_forward(img))
 
-        img = img_transform(img) # need to add padding to multiples of 8
-        
-        # SLICING THE PATCHES #################################################
-        x4 = img.shape[2]   # full image
-        x1 = x4 // 2        # half image
-        x2 = x1 // 2        # quarter image
-        x3 = x1 + x2
-        y4 = img.shape[1]
-        y1 = y4 // 2
-        y2 = y1 // 2
-        y3 = y1 + y2
-        img_list = [
-                img.clone()[:,  0:y1 ,  0:x1],  # to check if cloning is needed
-                img.clone()[:,  0:y1 , x2:x3],
-                img.clone()[:,  0:y1 , x1:x4],
-                img.clone()[:, y2:y3 ,  0:x1],
-                img.clone()[:, y2:y3 , x2:x3],
-                img.clone()[:, y2:y3 , x1:x4],
-                img.clone()[:, y1:y4 ,  0:x1],
-                img.clone()[:, y1:y4 , x2:x3],
-                img.clone()[:, y1:y4 , x1:x4]
-                ]
-        
-        gt = np.sum(den)
-        gts.append(gt)
-        pred_maps = []
-        
-        # NET FORWARD #########################################################
-        for inputs in img_list:
+            x3 = int(x4 * 3/8)
+            x5 = int(x4 * 5/8)
+            y3 = int(y4 * 3/8)
+            y5 = int(y4 * 5/8)
+            x32 = x3-x2
+            x52 = x5-x2
+            x51 = x5-x1
+            x41 = x4-x1
+            y32 = y3-y2
+            y52 = y5-y2
+            y41 = y4-y1
+            y51 = y5-y1
+            
+            slice0 = pred_maps[0].cpu().data.numpy()[0,0,0:y3,0:x3]
+            slice1 = pred_maps[1].cpu().data.numpy()[0,0,0:y3,x32:x52]
+            slice2 = pred_maps[2].cpu().data.numpy()[0,0,0:y3,x51:x41]
+            slice3 = pred_maps[3].cpu().data.numpy()[0,0,y32:y52,0:x3]
+            slice4 = pred_maps[4].cpu().data.numpy()[0,0,y32:y52,x32:x52]
+            slice5 = pred_maps[5].cpu().data.numpy()[0,0,y32:y52,x51:x41]
+            slice6 = pred_maps[6].cpu().data.numpy()[0,0,y51:y41,0:x3]
+            slice7 = pred_maps[7].cpu().data.numpy()[0,0,y51:y41,x32:x52]
+            slice8 = pred_maps[8].cpu().data.numpy()[0,0,y51:y41,x51:x41]
+            
+            pred_map = np.vstack((np.hstack((slice0,slice1,slice2)),
+                                  np.hstack((slice3,slice4,slice5)),
+                                  np.hstack((slice6,slice7,slice8))
+                                ))
+            sio.savemat(exp_name+'/pred/'+filename_no_ext+'.mat',{'data':pred_map/100.})
+
+        else:
             with torch.no_grad():
-                img = Variable(img_list[0][None,:,:,:]).cuda()
-                pred_maps.append(net.test_forward(img))
-                
-        pred_map = pred_maps[0].new_empty((1,1,y4,x4))
+               img = Variable(img[None,:,:,:]).cuda()
+               pred_map = net.test_forward(img)
+            sio.savemat(exp_name+'/pred/'+filename_no_ext+'.mat',{'data':pred_map.squeeze().cpu().numpy()/100.})
+            pred_map = pred_map.cpu().data.numpy()[0,0,:,:]
         
-        # GETTING DENSITY FROM NEAREST CENTER PATCH ###########################
-        x3 = int(x4 * 3/8)
-        x5 = int(x4 * 5/8)
-        y3 = int(y4 * 3/8)
-        y5 = int(y4 * 5/8)
-        for y in range(y3):
-            for x in range(x3):
-                pred_map[0,0,y,x] = pred_maps[0][0,0,y,x]
-            for x in range(x3,x5):
-                pred_map[0,0,y,x] = pred_maps[1][0,0,y,x-x2]
-            for x in range(x5,x4):
-                pred_map[0,0,y,x] = pred_maps[2][0,0,y,x-x1]
-        for y in range(y3,y5):
-            for x in range(x3):
-                pred_map[0,0,y,x] = pred_maps[3][0,0,y-y2,x]
-            for x in range(x3,x5):
-                pred_map[0,0,y,x] = pred_maps[4][0,0,y-y2,x-x2]
-            for x in range(x5,x4):
-                pred_map[0,0,y,x] = pred_maps[5][0,0,y-y2,x-x1]
-        for y in range(y5,y4):
-            for x in range(x3):
-                pred_map[0,0,y,x] = pred_maps[6][0,0,y-y1,x]
-            for x in range(x3,x5):
-                pred_map[0,0,y,x] = pred_maps[7][0,0,y-y1,x-x2]
-            for x in range(x5,x4):
-                pred_map[0,0,y,x] = pred_maps[8][0,0,y-y1,x-x1]
-        
-        sio.savemat(exp_name+'/pred/'+filename_no_ext+'.mat',{'data':pred_map.squeeze().cpu().numpy()/100.})
-        sio.savemat(exp_name+'/gt/'+filename_no_ext+'.mat',{'data':den})
-
-        pred_map = pred_map.cpu().data.numpy()[0,0,:,:]
-
         pred = np.sum(pred_map)/100.0
         preds.append(pred)
+
+        gt = np.sum(den)
+        gts.append(gt)
+        sio.savemat(exp_name+'/gt/'+filename_no_ext+'.mat',{'data':den})
         pred_map = pred_map/np.max(pred_map+1e-20)
-        
         den = den/np.max(den+1e-20)
-        
-        # GRAPHS ##############################################################        
-        den_frame = plt.gca()
-        plt.imshow(den, 'jet')
-        den_frame.axes.get_yaxis().set_visible(False)
-        den_frame.axes.get_xaxis().set_visible(False)
-        den_frame.spines['top'].set_visible(False) 
-        den_frame.spines['bottom'].set_visible(False) 
-        den_frame.spines['left'].set_visible(False) 
-        den_frame.spines['right'].set_visible(False) 
-        plt.savefig(exp_name+'/'+filename_no_ext+'_gt_'+str(int(gt))+'.png',\
-            bbox_inches='tight',pad_inches=0,dpi=150)
 
-        plt.close()
-        
-        # sio.savemat(exp_name+'/'+filename_no_ext+'_gt_'+str(int(gt))+'.mat',{'data':den})
-
-        pred_frame = plt.gca()
-        plt.imshow(pred_map, 'jet')
-        pred_frame.axes.get_yaxis().set_visible(False)
-        pred_frame.axes.get_xaxis().set_visible(False)
-        pred_frame.spines['top'].set_visible(False) 
-        pred_frame.spines['bottom'].set_visible(False) 
-        pred_frame.spines['left'].set_visible(False) 
-        pred_frame.spines['right'].set_visible(False) 
-        plt.savefig(exp_name+'/'+filename_no_ext+'_pred_'+str(float(pred))+'.png',\
-            bbox_inches='tight',pad_inches=0,dpi=150)
-
-        plt.close()
-
-        # sio.savemat(exp_name+'/'+filename_no_ext+'_pred_'+str(float(pred))+'.mat',{'data':pred_map})
-
-        diff = den-pred_map
-
-        diff_frame = plt.gca()
-        plt.imshow(diff, 'jet')
-        plt.colorbar()
-        diff_frame.axes.get_yaxis().set_visible(False)
-        diff_frame.axes.get_xaxis().set_visible(False)
-        diff_frame.spines['top'].set_visible(False) 
-        diff_frame.spines['bottom'].set_visible(False) 
-        diff_frame.spines['left'].set_visible(False) 
-        diff_frame.spines['right'].set_visible(False) 
-        plt.savefig(exp_name+'/'+filename_no_ext+'_diff.png',\
-            bbox_inches='tight',pad_inches=0,dpi=150)
-
-        plt.close()
-
-        # sio.savemat(exp_name+'/'+filename_no_ext+'_diff.mat',{'data':diff})
-                     
+        if save_graphs:      
+            den_frame = plt.gca()
+            plt.imshow(den, 'jet')
+            den_frame.axes.get_yaxis().set_visible(False)
+            den_frame.axes.get_xaxis().set_visible(False)
+            den_frame.spines['top'].set_visible(False) 
+            den_frame.spines['bottom'].set_visible(False) 
+            den_frame.spines['left'].set_visible(False) 
+            den_frame.spines['right'].set_visible(False) 
+            plt.savefig(exp_name+'/'+filename_no_ext+'_gt_'+str(int(gt))+'.png',bbox_inches='tight',pad_inches=0,dpi=150)
+            plt.close()
+            # sio.savemat(exp_name+'/'+filename_no_ext+'_gt_'+str(int(gt))+'.mat',{'data':den})
+    
+            pred_frame = plt.gca()
+            plt.imshow(pred_map, 'jet')
+            pred_frame.axes.get_yaxis().set_visible(False)
+            pred_frame.axes.get_xaxis().set_visible(False)
+            pred_frame.spines['top'].set_visible(False) 
+            pred_frame.spines['bottom'].set_visible(False) 
+            pred_frame.spines['left'].set_visible(False) 
+            pred_frame.spines['right'].set_visible(False) 
+            plt.savefig(exp_name+'/'+filename_no_ext+'_pred_'+str(float(pred))+'.png',bbox_inches='tight',pad_inches=0,dpi=150)
+            plt.close()
+            # sio.savemat(exp_name+'/'+filename_no_ext+'_pred_'+str(float(pred))+'.mat',{'data':pred_map})
+    
+            diff = den-pred_map
+            diff_frame = plt.gca()
+            plt.imshow(diff, 'jet')
+            plt.colorbar()
+            diff_frame.axes.get_yaxis().set_visible(False)
+            diff_frame.axes.get_xaxis().set_visible(False)
+            diff_frame.spines['top'].set_visible(False) 
+            diff_frame.spines['bottom'].set_visible(False) 
+            diff_frame.spines['left'].set_visible(False) 
+            diff_frame.spines['right'].set_visible(False) 
+            plt.savefig(exp_name+'/'+filename_no_ext+'_diff.png',bbox_inches='tight',pad_inches=0,dpi=150)
+            plt.close()
+#            sio.savemat(exp_name+'/diff/'+filename_no_ext+'_diff.mat',{'data':diff})
+    preds=np.asarray(preds)
+    gts= np.asarray(gts)
+    print('MAE= ' + str(np.mean(np.abs(gts-preds))))
+    print('MSE= ' + str(np.sqrt(np.mean((gts-preds)**2))))
 
 if __name__ == '__main__':
     main()
