@@ -81,9 +81,12 @@ def test(file_list, model_path):
         if img.mode == 'L':
             img = img.convert('RGB')
 
-        img = img_transform(img) # need to add padding to multiples of 8 if slicing
+        img = img_transform(img)
         
         if slicing:
+            xr = (8-img.shape[2]%8)%8
+            yr = (8-img.shape[1]%8)%8
+            img = nn.functional.pad(img, (xr,xr,yr,yr), 'constant',0)
             pred_maps = []
             x4 = img.shape[2]   # full image
             x1 = x4 // 2        # half image

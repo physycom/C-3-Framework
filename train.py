@@ -26,6 +26,9 @@ if data_mode is 'SHHA':
 elif data_mode is 'SHHB':
     from datasets.SHHB.loading_data import loading_data 
     from datasets.SHHB.setting import cfg_data 
+elif data_mode is 'Venice':
+    from datasets.Venice.loading_data import loading_data 
+    from datasets.Venice.setting import cfg_data 
 elif data_mode is 'QNRF':
     from datasets.QNRF.loading_data import loading_data 
     from datasets.QNRF.setting import cfg_data 

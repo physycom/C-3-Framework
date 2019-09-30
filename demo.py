@@ -37,6 +37,8 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(args.video)
     while(cap.isOpened()):
         _, frame = cap.read()
+        if frame is None:
+            break
         # convert to pytorch tensor and normalize
         tensor = torchvision.transforms.ToTensor()(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         tensor = torchvision.transforms.functional.normalize(tensor, mean=mean, std=std)
