@@ -17,7 +17,7 @@ from misc import pytorch_ssim
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="./all_ep_867_mae_10.5_mse_18.9.pth", type=str, help="Weights file to use")
+    parser.add_argument("--model", default="./checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth", type=str, help="Weights file to use")
     parser.add_argument("--video", default="D:/Alex/venice/test_data/videos/4895.mp4", type=str, help="Video file to elapse")
     parser.add_argument("--opacity", default=0.7, type=float, help="Opacity value for the density map overlap")
     args = parser.parse_args()
@@ -30,8 +30,7 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(args.model))
     net.cuda()
     net.eval()
-    mean = [0.45163909, 0.44693739, 0.43153589]
-    std =  [0.23758833, 0.22964933, 0.2262614]
+    mean, std = [0.53144014, 0.50784626, 0.47360169], [0.19302233, 0.18909324, 0.17572044]
     
     # open the video stream / file
     cap = cv2.VideoCapture(args.video)

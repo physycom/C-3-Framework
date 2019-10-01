@@ -17,6 +17,6 @@ __C_Venice.LOG_PARA = 100.
 __C_Venice.RESUME_MODEL = ''#model path
 __C_Venice.TRAIN_BATCH_SIZE = 6 #imgs
 
-__C_Venice.VAL_BATCH_SIZE = 6 #
+__C_Venice.VAL_BATCH_SIZE = 1 #
 
 

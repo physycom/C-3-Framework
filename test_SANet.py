@@ -15,9 +15,9 @@ from PIL import Image
 
 ## SETUP AND PARAMETERS #######################
 torch.cuda.set_device(0)
-torch.backends.cudnn.enabled = False
+torch.backends.cudnn.enabled = True
 
-exp_name = '../SHHB_results'
+exp_name = '../Venice_results'
 if not os.path.exists(exp_name):
     os.mkdir(exp_name)
 
@@ -32,9 +32,9 @@ if not os.path.exists(exp_name+'/diff'):
 
 slicing = False # use the paper test method. may give better results, but slower
 save_graphs = False # save density maps images
-dataRoot = '../ProcessedData/shanghaitech_part_B/test'
-model_path = './all_ep_867_mae_10.5_mse_18.9.pth'
-mean_std = ([0.45163909, 0.44693739, 0.43153589],[0.23758833, 0.22964933, 0.2262614])
+dataRoot = '../ProcessedData/Venice/test'
+model_path = './checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth'
+mean_std = ([0.53144014, 0.50784626, 0.47360169],[0.19302233, 0.18909324, 0.17572044])
 ##################################################
 
 img_transform = standard_transforms.Compose([
@@ -67,7 +67,7 @@ def test(file_list, model_path):
     preds = []
 
     for filename in file_list:
-        print( filename )
+        print( filename , end = ', ')
         imgname = dataRoot + '/img/' + filename
         filename_no_ext = filename.split('.')[0]
 
@@ -198,7 +198,7 @@ def test(file_list, model_path):
 #            sio.savemat(exp_name+'/diff/'+filename_no_ext+'_diff.mat',{'data':diff})
     preds=np.asarray(preds)
     gts= np.asarray(gts)
-    print('MAE= ' + str(np.mean(np.abs(gts-preds))))
+    print('\nMAE= ' + str(np.mean(np.abs(gts-preds))))
     print('MSE= ' + str(np.sqrt(np.mean((gts-preds)**2))))
 
 if __name__ == '__main__':
