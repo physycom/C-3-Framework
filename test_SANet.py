@@ -1,3 +1,5 @@
+#This scripts tests SANet and gives MAE and MSE on a dataset.
+
 from matplotlib import pyplot as plt
 
 import os

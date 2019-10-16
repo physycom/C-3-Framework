@@ -1,18 +1,13 @@
 import numpy as np
 import os
-import math
 import time
-import random
 import shutil
 
 import torch
 from torch import nn
 
-
 import torchvision.utils as vutils
 import torchvision.transforms as standard_transforms
-
-import pdb
 
 
 def initialize_weights(models):
@@ -107,8 +102,6 @@ def logger_txt(log_file,epoch,scores):
 
     snapshot_name = 'all_ep_%d_mae_%.1f_mse_%.1f' % (epoch + 1, mae, mse)
 
-    # pdb.set_trace()
-
     with open(log_file, 'a') as f:
         f.write('='*15 + '+'*15 + '='*15 + '\n\n')
         f.write(snapshot_name + '\n')
@@ -154,7 +147,6 @@ def print_summary(exp_name,scores,train_record):
 
 def print_WE_summary(log_txt,epoch,scores,train_record,c_maes):
     mae, mse, loss = scores
-    # pdb.set_trace()
     with open(log_txt, 'a') as f:
         f.write('='*15 + '+'*15 + '='*15 + '\n')
         f.write(str(epoch) + '\n\n')

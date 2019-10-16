@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from misc.utils import initialize_weights
-import pdb
 
 
 class BasicConv(nn.Module):
@@ -30,7 +29,6 @@ class BasicDeconv(nn.Module):
         self.bn = nn.InstanceNorm2d(out_channels, affine=True) if self.use_bn else None
 
     def forward(self, x):
-        # pdb.set_trace()
         x = self.tconv(x)
         if self.use_bn:
             x = self.bn(x)
@@ -41,14 +39,10 @@ class SAModule_Head(nn.Module):
     def __init__(self, in_channels, out_channels, use_bn):
         super(SAModule_Head, self).__init__()
         branch_out = out_channels // 4
-        self.branch1x1 = BasicConv(in_channels, branch_out, use_bn=use_bn,
-                            kernel_size=1)
-        self.branch3x3 = BasicConv(in_channels, branch_out, use_bn=use_bn,
-                            kernel_size=3, padding=1)
-        self.branch5x5 = BasicConv(in_channels, branch_out, use_bn=use_bn,
-                            kernel_size=5, padding=2)
-        self.branch7x7 = BasicConv(in_channels, branch_out, use_bn=use_bn,
-                            kernel_size=7, padding=3)
+        self.branch1x1 = BasicConv(in_channels, branch_out, use_bn=use_bn, kernel_size=1)
+        self.branch3x3 = BasicConv(in_channels, branch_out, use_bn=use_bn, kernel_size=3, padding=1)
+        self.branch5x5 = BasicConv(in_channels, branch_out, use_bn=use_bn, kernel_size=5, padding=2)
+        self.branch7x7 = BasicConv(in_channels, branch_out, use_bn=use_bn, kernel_size=7, padding=3)
     
     def forward(self, x):
         branch1x1 = self.branch1x1(x)
@@ -64,25 +58,18 @@ class SAModule(nn.Module):
         super(SAModule, self).__init__()
         branch_out = out_channels // 4
         branch_inner = in_channels // 2
-        self.branch1x1 = BasicConv(in_channels, branch_out, use_bn=use_bn,
-                            kernel_size=1)
+        self.branch1x1 = BasicConv(in_channels, branch_out, use_bn=use_bn, kernel_size=1)
         self.branch3x3 = nn.Sequential(
-                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
-                            kernel_size=1),
-                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
-                            kernel_size=3, padding=1),
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn, kernel_size=1),
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn, kernel_size=3, padding=1),
                         )
         self.branch5x5 = nn.Sequential(
-                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
-                            kernel_size=1),
-                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
-                            kernel_size=5, padding=2),
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn, kernel_size=1),
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn, kernel_size=5, padding=2),
                         )
         self.branch7x7 = nn.Sequential(
-                        BasicConv(in_channels, branch_inner, use_bn=use_bn,
-                            kernel_size=1),
-                        BasicConv(branch_inner, branch_out, use_bn=use_bn,
-                            kernel_size=7, padding=3),
+                        BasicConv(in_channels, branch_inner, use_bn=use_bn, kernel_size=1),
+                        BasicConv(branch_inner, branch_out, use_bn=use_bn, kernel_size=7, padding=3),
                         )
     
     def forward(self, x):

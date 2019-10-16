@@ -1,11 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import pdb
 from config import cfg
 
 
-class CrowdCounter(nn.Module):
+class CrowdCounter(torch.nn.Module):
     def __init__(self,gpus,model_name,loss_1_fn,loss_2_fn):
         super(CrowdCounter, self).__init__()        
         

@@ -8,7 +8,6 @@ from torch.optim.lr_scheduler import StepLR
 from models.M2TCC import CrowdCounter
 from config import cfg
 from misc.utils import *
-import pdb
 
 
 class Trainer():
@@ -24,7 +23,7 @@ class Trainer():
         self.net_name = cfg.NET
 
         if self.net_name in ['SANet']:
-            loss_1_fn = nn.MSELoss()
+            loss_1_fn = torch.nn.MSELoss()
             from misc import pytorch_ssim
             loss_2_fn = pytorch_ssim.SSIM(window_size=11)
 
@@ -80,9 +79,9 @@ class Trainer():
                 self.timer['val time'].tic()
                 if self.data_mode in ['SHHA', 'SHHB', 'QNRF', 'UCF50','Venice']:
                     self.validate_V1()
-                elif self.data_mode is 'WE':
+                elif self.data_mode == 'WE':
                     self.validate_V2()
-                elif self.data_mode is 'GCC':
+                elif self.data_mode == 'GCC':
                     self.validate_V3()
                 self.timer['val time'].toc(average=False)
                 print( 'val time: {:.2f}s'.format(self.timer['val time'].diff) )

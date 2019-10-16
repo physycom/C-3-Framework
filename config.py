@@ -1,7 +1,5 @@
-import os
 from easydict import EasyDict as edict
 import time
-import torch
 
 # init
 __C = edict()
@@ -23,15 +21,15 @@ if __C.DATASET == 'GCC':# only for GCC
 __C.NET = 'SANet' # net selection: MCNN, VGG, VGG_DECODER, Res50, CSRNet, SANet
 
 __C.PRE_GCC = False # use the pretrained model on GCC dataset
-__C.PRE_GCC_MODEL = './models/M2TCC_Model/08-SANet_all_ep_57_mae_42.4_mse_85.4.pth' # path to model
+__C.PRE_GCC_MODEL = '' # path to model
 
 __C.RESUME = False # contine training
-__C.RESUME_PATH = './exp/04-25_09-19_SHHB_VGG_1e-05/latest_state.pth' #
+__C.RESUME_PATH = '' #
 
 __C.GPU_ID = [0] # sigle gpu: [0], [1] ...; multi gpus: [0,1]
 
 # learning rate settings
-__C.LR = 1e-5 # learning rate ###
+__C.LR = 1e-5 # learning rate 
 __C.LR_DECAY = 1 # decay rate
 __C.LR_DECAY_START = -1 # when training epoch is more than it, the learning rate will be begin to decay
 __C.NUM_EPOCH_LR_DECAY = 1 # decay frequency
@@ -69,7 +67,4 @@ __C.VAL_FREQ = 10 # Before __C.VAL_DENSE_START epoches, the freq is set as __C.V
 __C.VISIBLE_NUM_IMGS = 1 #  must be 1 for training images with the different sizes
 
 
-
-#================================================================================
-#================================================================================
 #================================================================================  

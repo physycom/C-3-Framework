@@ -2,9 +2,7 @@ import torchvision.transforms as standard_transforms
 from torch.utils.data import DataLoader
 import misc.transforms as own_transforms
 from .Venice import Venice
-from .setting import cfg_data 
-import torch
-
+from .setting import cfg_data
 
 def loading_data():
     mean_std = cfg_data.MEAN_STD
@@ -16,7 +14,7 @@ def loading_data():
     val_main_transform = own_transforms.Compose([
         own_transforms.RandomCrop(cfg_data.TRAIN_SIZE)
     ])
-    val_main_transform = None
+    val_main_transform = None # comment this to validate on images cropped like during training instead of full images
     img_transform = standard_transforms.Compose([
         standard_transforms.ToTensor(),
         standard_transforms.Normalize(*mean_std)

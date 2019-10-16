@@ -1,15 +1,9 @@
 import numpy as np
 import os
-import random
-from scipy import io as sio
-import sys
-import torch
 from torch.utils import data
-from PIL import Image, ImageOps
-
+from PIL import Image
 import pandas as pd
 
-from config import cfg
 
 class Venice(data.Dataset):
     def __init__(self, data_path, mode, main_transform=None, img_transform=None, gt_transform=None):

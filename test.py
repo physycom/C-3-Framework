@@ -1,19 +1,15 @@
 from matplotlib import pyplot as plt
 
-import matplotlib
 import os
-import random
 import torch
-from torch.autograd import Variable
 import torchvision.transforms as standard_transforms
 import misc.transforms as own_transforms
 import pandas as pd
-
+import numpy as np
 from models.CC import CrowdCounter
 from config import cfg
-from misc.utils import *
 import scipy.io as sio
-from PIL import Image, ImageOps
+from PIL import Image
 
 torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
@@ -60,9 +56,6 @@ def test(file_list, model_path):
 
     f1 = plt.figure(1)
 
-    gts = []
-    preds = []
-
     for filename in file_list:
         print( filename )
         imgname = dataRoot + '/img/' + filename
@@ -83,7 +76,7 @@ def test(file_list, model_path):
 
         gt = np.sum(den)
         with torch.no_grad():
-            img = Variable(img[None,:,:,:]).cuda()
+            img = torch.autograd.Variable(img[None,:,:,:]).cuda()
             pred_map = net.test_forward(img)
 
         sio.savemat(exp_name+'/pred/'+filename_no_ext+'.mat',{'data':pred_map.squeeze().cpu().numpy()/100.})

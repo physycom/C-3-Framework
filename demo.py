@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# This scripts uses SANet on a video file / video cam to estimate density map
-# and crowd count and shows them overlapped to the video.
+# This scripts uses SANet on a video file / video cam to estimate density map and crowd count and shows them overlapped to the video.
 
 import torch
 import torchvision

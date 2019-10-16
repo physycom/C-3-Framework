@@ -1,3 +1,5 @@
+#This script runs SANet on a video source and display result in a user friendly GUI.
+
 import tkinter as tk
 import cv2
 import PIL.Image, PIL.ImageTk
@@ -121,12 +123,11 @@ class CCGUI:
         try:
             # gets prediction and original frame from the crowd counter thread, then overlaps according to blend mode
             gray, pred_map = self.thread_queue.get(0)
-            cmap = self.cmap_var.get()
-            dmap = cv2.cvtColor(cv2.applyColorMap(np.array(pred_map/np.max(pred_map+1e-20) * 255, dtype = np.uint8), self.cmaplist.index(cmap)), cv2.COLOR_BGR2RGB)
+            gray = gray.astype(np.float32)/255
+            dmap = cv2.applyColorMap(np.array(pred_map/np.max(pred_map+1e-20) * 255, dtype = np.uint8), self.cmaplist.index(self.cmap_var.get()))
+            dmap = (cv2.cvtColor(dmap, cv2.COLOR_BGR2RGB)).astype(np.float32)/255
             blend = self.blend_var.get()
             opacity = self.opac_var.get()/100
-            dmap = dmap.astype(np.float32)/255
-            gray = gray.astype(np.float32)/255
             if blend == 'Add':
                 self.res = dmap*opacity + gray
             elif blend == 'Lighten':
@@ -140,8 +141,8 @@ class CCGUI:
             self.res = (np.clip(self.res,0,1)*255).astype(np.uint8)
             # write total people count below image and show results
             self.cclabel.config(text = "TOT count: "+str((int(np.sum(pred_map)/100 +0.5))))
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.res))
-            self.canvas.create_image(0, 0, image = self.photo, anchor = tk.NW)
+            self.output = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(self.res))
+            self.canvas.create_image(0, 0, image = self.output, anchor = tk.NW)
             self.window.after(self.delay, self.update)
         except queue.Empty:
             self.window.after(self.delay, self.update)
