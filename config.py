@@ -8,16 +8,6 @@ cfg = __C
 #------------------------------TRAIN------------------------
 __C.SEED = 3035 # random seed,  for reproduction
 __C.DATASET = 'Venice' # dataset selection: GCC, SHHA, SHHB, UCF50, QNRF, WE, Venice
-
-if __C.DATASET == 'UCF50':# only for UCF50
-	from datasets.UCF50.setting import cfg_data
-	__C.VAL_INDEX = cfg_data.VAL_INDEX 
-
-if __C.DATASET == 'GCC':# only for GCC
-	from datasets.GCC.setting import cfg_data
-	__C.VAL_MODE = cfg_data.VAL_MODE 
-
-
 __C.NET = 'SANet' # net selection: MCNN, VGG, VGG_DECODER, Res50, CSRNet, SANet
 
 __C.PRE_GCC = False # use the pretrained model on GCC dataset
@@ -66,5 +56,30 @@ __C.VAL_FREQ = 10 # Before __C.VAL_DENSE_START epoches, the freq is set as __C.V
 #------------------------------VIS------------------------
 __C.VISIBLE_NUM_IMGS = 1 #  must be 1 for training images with the different sizes
 
-
+#-----------------------MEAN/STD and SIZE-----------------
+if __C.DATASET == 'SHHA':
+    from datasets.SHHA.setting import cfg_data 
+elif __C.DATASET == 'SHHB':
+    from datasets.SHHB.setting import cfg_data 
+elif __C.DATASET == 'Venice':
+    from datasets.Venice.setting import cfg_data 
+elif __C.DATASET == 'QNRF':
+    from datasets.QNRF.setting import cfg_data 
+elif __C.DATASET == 'UCF50':
+    from datasets.UCF50.setting import cfg_data
+    __C.VAL_INDEX = cfg_data.VAL_INDEX 
+elif __C.DATASET == 'WE':
+    from datasets.WE.setting import cfg_data 
+elif __C.DATASET == 'GCC':
+    from datasets.GCC.setting import cfg_data
+    __C.VAL_MODE = cfg_data.VAL_MODE 
+elif __C.DATASET == 'Mall':
+    from datasets.Mall.setting import cfg_data
+elif __C.DATASET == 'UCSD':
+    from datasets.UCSD.setting import cfg_data 
+else:
+  raise Exception("Unknown dataset")
+  
+__C.MEAN_STD = cfg_data.MEAN_STD
+__C.STD_SIZE = cfg_data.STD_SIZE
 #================================================================================  

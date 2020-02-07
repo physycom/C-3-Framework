@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This scripts uses SANet on a video file / video cam to estimate density map and crowd count and shows them overlapped to the video.
 
 import torch
@@ -13,8 +12,8 @@ from misc import pytorch_ssim
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="./checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth", type=str, help="Weights file to use.")
-    parser.add_argument("--video", default="D:/Alex/venice/test_data/videos/4895.mp4", type=str, help="Video file to elapse or camera ip.")
+    parser.add_argument("--model", default="./checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth", type=str, help="Weights file to use. Careful: if using different model you may need to change the trained dataset in config file.")
+    parser.add_argument("--video", default="../venice/test_data/videos/4895.mp4", type=str, help="Video file to elapse or camera ip.")
     parser.add_argument("--opacity", default=0.7, type=float, help="Opacity value for the density map overlap.")
     parser.add_argument("--cmap", default=11, type=int, help="Colormap to use. Commons are 2 for Jet or 11 for Hot.", choices = [0,1,2,3,4,5,6,7,8,9,10,11])
     parser.add_argument("--mode", default='Add', type=str, help="Blend mode to use.", choices = ['Add','Lighten','Mix','Multiply'])
@@ -29,7 +28,7 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(args.model))
     net.cuda()
     net.eval()
-    mean, std = [0.53144014, 0.50784626, 0.47360169], [0.19302233, 0.18909324, 0.17572044]
+    mean, std = cfg.MEAN_STD
 
     # open the video stream / file
     cap = cv2.VideoCapture(args.video)

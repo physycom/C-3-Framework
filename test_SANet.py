@@ -1,17 +1,16 @@
-#This scripts tests SANet and gives MAE and MSE on a dataset.
+#This scripts tests SANet on a test dataset and gives MAE and MSE.
 
 from matplotlib import pyplot as plt
 
 import os
 import torch
-from torch.autograd import Variable
-import torchvision.transforms as standard_transforms
+import torchvision
 import pandas as pd
 import numpy as np
 
 from models.M2TCC import CrowdCounter
+from misc import pytorch_ssim
 from config import cfg
-from torch import nn
 import scipy.io as sio
 from PIL import Image
 
@@ -28,7 +27,7 @@ if not os.path.exists(exp_name+'/pred'):
 
 if not os.path.exists(exp_name+'/gt'):
     os.mkdir(exp_name+'/gt')
-    
+
 if not os.path.exists(exp_name+'/diff'):
     os.mkdir(exp_name+'/diff')
 
@@ -36,32 +35,28 @@ slicing = False # use the paper test method. may give better results, but slower
 save_graphs = False # save density maps images
 dataRoot = '../ProcessedData/Venice/test'
 model_path = './checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth'
-mean_std = ([0.53144014, 0.50784626, 0.47360169],[0.19302233, 0.18909324, 0.17572044])
+mean_std = cfg.MEAN_STD
 ##################################################
 
-img_transform = standard_transforms.Compose([
-        standard_transforms.ToTensor(),
-        standard_transforms.Normalize(*mean_std)
+img_transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(*mean_std)
     ])
-pil_to_tensor = standard_transforms.ToTensor()
+pil_to_tensor = torchvision.transforms.ToTensor()
 
 def main():
     print(dataRoot)
     file_list = [filename for root,dirs,filename in os.walk(dataRoot+'/img/')]                                           
 
     test(file_list[0], model_path)
-   
 
 def test(file_list, model_path):
-
-    loss_1_fn = nn.MSELoss()
-    from misc import pytorch_ssim
+    loss_1_fn = torch.nn.MSELoss()
     loss_2_fn = pytorch_ssim.SSIM(window_size=11)
     net = CrowdCounter(cfg.GPU_ID,cfg.NET, loss_1_fn,loss_2_fn)
     net.load_state_dict(torch.load(model_path))
     net.cuda()
     net.eval()
-
 
     f1 = plt.figure(1)
 
@@ -88,7 +83,7 @@ def test(file_list, model_path):
         if slicing:
             xr = (8-img.shape[2]%8)%8
             yr = (8-img.shape[1]%8)%8
-            img = nn.functional.pad(img, (xr,xr,yr,yr), 'constant',0)
+            img = torch.nn.functional.pad(img, (xr,xr,yr,yr), 'constant',0)
             pred_maps = []
             x4 = img.shape[2]   # full image
             x1 = x4 // 2        # half image
@@ -98,35 +93,19 @@ def test(file_list, model_path):
             y1 = y4 // 2
             y2 = y1 // 2
             y3 = y1 + y2
-            img_list = [
-                    img[:,  0:y1 ,  0:x1],
-                    img[:,  0:y1 , x2:x3],
-                    img[:,  0:y1 , x1:x4],
-                    img[:, y2:y3 ,  0:x1],
-                    img[:, y2:y3 , x2:x3],
-                    img[:, y2:y3 , x1:x4],
-                    img[:, y1:y4 ,  0:x1],
-                    img[:, y1:y4 , x2:x3],
-                    img[:, y1:y4 , x1:x4]
-                    ]
-        
+            img_list = [img[:,  0:y1 ,  0:x1],img[:,  0:y1 , x2:x3],img[:,  0:y1 , x1:x4],
+                        img[:, y2:y3 ,  0:x1],img[:, y2:y3 , x2:x3],img[:, y2:y3 , x1:x4],
+                        img[:, y1:y4 ,  0:x1],img[:, y1:y4 , x2:x3],img[:, y1:y4 , x1:x4]]
+
             for inputs in img_list:
                 with torch.no_grad():
-                    img = Variable(inputs[None,:,:,:]).cuda()
+                    img = torch.autograd.Variable(inputs[None,:,:,:]).cuda()
                     pred_maps.append(net.test_forward(img))
-
-            x3 = int(x4 * 3/8)
-            x5 = int(x4 * 5/8)
-            y3 = int(y4 * 3/8)
-            y5 = int(y4 * 5/8)
-            x32 = x3-x2
-            x52 = x5-x2
-            x51 = x5-x1
-            x41 = x4-x1
-            y32 = y3-y2
-            y52 = y5-y2
-            y41 = y4-y1
-            y51 = y5-y1
+    
+            x3, x5 = int(x4 * 3/8), int(x4 * 5/8)
+            y3, y5 = int(y4 * 3/8), int(y4 * 5/8)
+            x32, x52, x51, x41 = x3-x2, x5-x2, x5-x1, x4-x1
+            y32, y52, y51, y41 = y3-y2, y5-y2, y5-y1, y4-y1
             
             slice0 = pred_maps[0].cpu().data.numpy()[0,0,0:y3,0:x3]
             slice1 = pred_maps[1].cpu().data.numpy()[0,0,0:y3,x32:x52]
@@ -146,7 +125,7 @@ def test(file_list, model_path):
 
         else:
             with torch.no_grad():
-               img = Variable(img[None,:,:,:]).cuda()
+               img = torch.autograd.Variable(img[None,:,:,:]).cuda()
                pred_map = net.test_forward(img)
             sio.savemat(exp_name+'/pred/'+filename_no_ext+'.mat',{'data':pred_map.squeeze().cpu().numpy()/100.})
             pred_map = pred_map.cpu().data.numpy()[0,0,:,:]
@@ -197,9 +176,9 @@ def test(file_list, model_path):
             diff_frame.spines['right'].set_visible(False) 
             plt.savefig(exp_name+'/'+filename_no_ext+'_diff.png',bbox_inches='tight',pad_inches=0,dpi=150)
             plt.close()
-#            sio.savemat(exp_name+'/diff/'+filename_no_ext+'_diff.mat',{'data':diff})
+            # sio.savemat(exp_name+'/diff/'+filename_no_ext+'_diff.mat',{'data':diff})
     preds=np.asarray(preds)
-    gts= np.asarray(gts)
+    gts=np.asarray(gts)
     print('\nMAE= ' + str(np.mean(np.abs(gts-preds))))
     print('MSE= ' + str(np.sqrt(np.mean((gts-preds)**2))))
 
