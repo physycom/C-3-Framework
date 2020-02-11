@@ -1,15 +1,11 @@
+#This script calculates mean and std on a dataset
+
 import argparse
 import torchvision.datasets as dset
-
-
-
 import pdb
 from PIL import Image
 import numpy as np
 import os
-
-
-# TODO 
 
 def make_parser():
     parser = argparse.ArgumentParser()
@@ -29,7 +25,7 @@ if __name__ == '__main__':
         if img.mode == 'L':
             img = img.convert('RGB')
 
-        img = np.array(img.resize((1024,768),Image.BILINEAR))
+        img = np.array(img.resize((1920,1080),Image.BILINEAR))
 
         imgs_list.append(img)
 

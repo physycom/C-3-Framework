@@ -29,6 +29,9 @@ elif data_mode == 'SHHB':
 elif data_mode == 'Venice':
     from datasets.Venice.loading_data import loading_data 
     from datasets.Venice.setting import cfg_data 
+elif data_mode == 'Venezia_cc':
+    from datasets.Venezia_cc.loading_data import loading_data
+    from datasets.Venezia_cc.setting import cfg_data
 elif data_mode == 'QNRF':
     from datasets.QNRF.loading_data import loading_data 
     from datasets.QNRF.setting import cfg_data 

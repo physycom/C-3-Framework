@@ -7,7 +7,7 @@ cfg = __C
 
 #------------------------------TRAIN------------------------
 __C.SEED = 3035 # random seed,  for reproduction
-__C.DATASET = 'Venice' # dataset selection: GCC, SHHA, SHHB, UCF50, QNRF, WE, Venice
+__C.DATASET = 'Venezia_cc' # dataset selection: GCC, SHHA, SHHB, UCF50, QNRF, WE, Venice, Venezia_cc
 __C.NET = 'SANet' # net selection: MCNN, VGG, VGG_DECODER, Res50, CSRNet, SANet
 
 __C.PRE_GCC = False # use the pretrained model on GCC dataset
@@ -63,6 +63,8 @@ elif __C.DATASET == 'SHHB':
     from datasets.SHHB.setting import cfg_data 
 elif __C.DATASET == 'Venice':
     from datasets.Venice.setting import cfg_data 
+elif __C.DATASET == 'Venezia_cc':
+    from datasets.Venezia_cc.setting import cfg_data
 elif __C.DATASET == 'QNRF':
     from datasets.QNRF.setting import cfg_data 
 elif __C.DATASET == 'UCF50':

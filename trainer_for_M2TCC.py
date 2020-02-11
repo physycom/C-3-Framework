@@ -77,7 +77,7 @@ class Trainer():
             # validation
             if epoch%cfg.VAL_FREQ==0 or epoch>cfg.VAL_DENSE_START:
                 self.timer['val time'].tic()
-                if self.data_mode in ['SHHA', 'SHHB', 'QNRF', 'UCF50','Venice']:
+                if self.data_mode in ['SHHA', 'SHHB', 'QNRF', 'UCF50','Venice','Venezia_cc']:
                     self.validate_V1()
                 elif self.data_mode == 'WE':
                     self.validate_V2()
