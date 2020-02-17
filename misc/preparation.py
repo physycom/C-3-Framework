@@ -11,7 +11,8 @@ import glob
 from matplotlib import pyplot as plt
 import PIL.Image as Image
 from matplotlib import cm as CM
-
+import cv2
+#%%
 # This func converts the gt from the .npy format to .csv format of SANet
 def convert_gt_npy2csv(path):
     path_mat = path + "den/"
@@ -128,7 +129,7 @@ for img_path in img_paths:
     np.save(img_path.replace('.jpg','.npy').replace('images','ground_truth'), k)
 """
 #%%
-# Venezia_cc ground truth with adaptive kernels
+# Venezia_cc ground truth with fixed kernels
 root = "../Venezia_cc/"
 ptrain = os.path.join(root,'train_data','images')
 ptest = os.path.join(root,'test_data','images')
@@ -150,3 +151,44 @@ for img_path in img_paths:
             k[int(gt[i][1]),int(gt[i][0])]=1
     k = gaussian_filter(k,32)
     np.save(img_path.replace('.jpg','.npy').replace('images','ground_truth'), k)
+
+#%%
+# Venezia_cc ground truth with fixed kernels and downsizing dataset by 4
+root = "../Venezia_cc/"
+ptrain = os.path.join(root,'train_data','images')
+ptest = os.path.join(root,'test_data','images')
+path_sets = [ptrain,ptest]
+img_paths = []
+
+for path in path_sets:
+    for img_path in glob.glob(os.path.join(path, '*.jpg')):
+        img_paths.append(img_path)
+
+for img_path in img_paths:
+    print(img_path)
+    df = pd.read_csv(img_path.replace('.jpg','.csv').replace('images','ground_truth'))
+    gt = df[['X','Y']].to_numpy()
+    gt = (np.rint(gt/4)).astype(np.uint16)
+    img = cv2.imread(img_path)
+    cv2.imwrite(img_path.replace('images','resize'), cv2.resize(img, (1504,1000), interpolation=cv2.INTER_CUBIC))
+    k = np.zeros((1000,1504))
+    for i in range(0,len(gt)):
+        if int(gt[i][1])<1000 and int(gt[i][0])<1504:
+            k[int(gt[i][1]),int(gt[i][0])]=1
+    k = gaussian_filter(k,8)
+    dfout = pd.DataFrame(k)
+    dfout.to_csv(img_path.replace('.jpg','.csv').replace('images','resize'), sep=',', header=False, index=False)
+
+#%% quick tester for density overlap
+img_n = "000" # 0, 3, 15, 26
+den = pd.read_csv("../Venezia_cc/train_data/resize/img_000"+img_n+".csv",sep=',',header=None).values
+img = cv2.imread("../Venezia_cc/train_data/resize/img_000"+img_n+".jpg")
+gray = np.repeat(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)[:, :, np.newaxis], 3, axis=2)
+dmap = cv2.applyColorMap(np.array(den/np.max(den+1e-20) * 255, dtype = np.uint8), 11)
+dmap = dmap.astype(np.float32)/255
+gray = gray.astype(np.float32)/255
+res = dmap*0.7 + gray
+res = (np.clip(res,0,1)*255).astype(np.uint8)
+cv2.putText(res, str(int(np.sum(den))), (10, img.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+cv2.imshow("Crowd Counting", res)
+cv2.waitKey(0)

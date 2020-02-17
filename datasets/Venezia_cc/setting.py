@@ -5,11 +5,11 @@ __C_Venice = edict()
 
 cfg_data = __C_Venice
 
-__C_Venice.STD_SIZE = (4000,6016) #
-__C_Venice.TRAIN_SIZE = (1080, 1920) #
+__C_Venice.STD_SIZE = (1000,1504) #
+__C_Venice.TRAIN_SIZE = (1000, 1504) #
 __C_Venice.DATA_PATH = '../ProcessedData/Venezia_cc' #               
  
-__C_Venice.MEAN_STD = ([0.49964153766, 0.50049936771, 0.50207442045],[0.23948863148, 0.242029055953, 0.23773752152]) #
+__C_Venice.MEAN_STD = ([0.49964153, 0.50049936, 0.50207442],[0.23948863, 0.242029055, 0.23773752]) #
 
 __C_Venice.LABEL_FACTOR = 1
 __C_Venice.LOG_PARA = 100.
