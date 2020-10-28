@@ -27,7 +27,7 @@ def main():
 
     mask = None
     if args.mask != "" :
-      mask = cv2.imread(args.mask, 0)      
+      mask = cv2.imread(args.mask, 0)
 
     img = cv2.cvtColor(cv2.imread(args.image), cv2.COLOR_BGR2RGB)
     if img.shape[0]!=h or img.shape[1]!=w:
@@ -35,7 +35,7 @@ def main():
     gray = np.repeat(cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)[:, :, np.newaxis], 3, axis=2)
     gray = gray.astype(np.float32)/255
     img = img_transform(img)
-    
+
     if args.slicing:
         # this slices the image in 9 patches with 50% overlap, runs SANet on each patch and then takes only the values nearest to the patch center for the final prediction map
         # this may help reducing statistical errors, but runs slower than standard method. could also cause some visual artifacts
@@ -54,7 +54,7 @@ def main():
         img_list = [img[:,  0:y1 ,  0:x1],img[:,  0:y1 , x2:x3],img[:,  0:y1 , x1:x4],
                     img[:, y2:y3 ,  0:x1],img[:, y2:y3 , x2:x3],img[:, y2:y3 , x1:x4],
                     img[:, y1:y4 ,  0:x1],img[:, y1:y4 , x2:x3],img[:, y1:y4 , x1:x4]]
-    
+
         for inputs in img_list:
             with torch.no_grad():
                 img = torch.autograd.Variable(inputs[None,:,:,:]).cuda()
@@ -64,7 +64,7 @@ def main():
         y3, y5 = int(y4 * 3/8), int(y4 * 5/8)
         x32, x52, x51, x41 = x3-x2, x5-x2, x5-x1, x4-x1
         y32, y52, y51, y41 = y3-y2, y5-y2, y5-y1, y4-y1
-        
+
         slice0 = pred_maps[0].cpu().data.numpy()[0,0,0:y3,0:x3]
         slice1 = pred_maps[1].cpu().data.numpy()[0,0,0:y3,x32:x52]
         slice2 = pred_maps[2].cpu().data.numpy()[0,0,0:y3,x51:x41]
@@ -74,7 +74,7 @@ def main():
         slice6 = pred_maps[6].cpu().data.numpy()[0,0,y51:y41,0:x3]
         slice7 = pred_maps[7].cpu().data.numpy()[0,0,y51:y41,x32:x52]
         slice8 = pred_maps[8].cpu().data.numpy()[0,0,y51:y41,x51:x41]
-        
+
         pred_map = np.vstack((np.hstack((slice0,slice1,slice2)),
                               np.hstack((slice3,slice4,slice5)),
                               np.hstack((slice6,slice7,slice8))))

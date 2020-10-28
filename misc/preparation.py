@@ -1,4 +1,4 @@
-#This script generates ground truth files in various formats and with fixed or adaptive kernels
+#This script generates ground truth files in various formats and with fixed or adaptive kernels. Also other utilities added
 #%%
 import numpy as np
 import os
@@ -192,3 +192,17 @@ res = (np.clip(res,0,1)*255).astype(np.uint8)
 cv2.putText(res, str(int(np.sum(den))), (10, img.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
 cv2.imshow("Crowd Counting", res)
 cv2.waitKey(0)
+
+#%% convert multiple gpu trained model to single gpu
+from collections import OrderedDict 
+import torch
+
+model_in = './checkpoints/08-SANet_all_ep_57_mae_42.4_mse_85.4.pth'
+statedict = torch.load(model_in) 
+
+statedict_new = OrderedDict() 
+for statekey in statedict:
+    statekey_new = statekey.replace('.module','')
+    statedict_new[statekey_new] = statedict[statekey]
+
+torch.save(statedict_new, 'model_out.pth')

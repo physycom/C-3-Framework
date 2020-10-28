@@ -33,8 +33,11 @@ if not os.path.exists(exp_name+'/diff'):
 
 slicing = False # use the paper test method. may give better results, but slower
 save_graphs = False # save density maps images
-dataRoot = '../ProcessedData/Venice/test'
-model_path = './checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth'
+dataRoot = '../Venezia_cc/test_data/resize'
+# model_path = './checkpoints/venice_all_ep_1286_mae_5.9_mse_7.4.pth'
+# model_path = './checkpoints/shhb_all_ep_1152_mae_11.5_mse_16.9.pth'
+# model_path = './checkpoints/ven_cc_s4_ep_224_mae_57.3_mse_129.3.pth'
+model_path = './checkpoints/ven_cc_s4_ep_309_mae_83.2_mse_164.9.pth'
 mean_std = cfg.MEAN_STD
 ##################################################
 
